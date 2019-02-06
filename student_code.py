@@ -130,6 +130,48 @@ class KnowledgeBase(object):
         # Implementation goes here
         # Not required for the extra credit assignment
 
+    def kb_helper(self, fact_or_rule, depth):
+        depth += 2
+        indent = '\n' + depth*' '
+        string = indent
+        if isinstance(fact_or_rule, Fact):
+            if fact_or_rule in self.facts:
+                fact = self._get_fact(fact_or_rule)
+                string += 'fact: '
+                string += str(fact.statement)
+                if fact.asserted:
+                    string += ' ASSERTED'
+                if len(fact_or_rule.supported_by) != 0:
+                    indent = '\n' + depth*' '
+                    for pair in fact_or_rule.supported_by:
+                        string += indent
+                        string += 'SUPPORTED BY'
+                        for fr in pair:
+                            string += self.kb_helper(fr, depth)
+        elif isinstance(fact_or_rule, Rule):
+            if fact_or_rule in self.rules:
+                rule = self._get_rule(fact_or_rule)
+                string += 'rule:'
+                left_hand = ' ('
+                for statement in rule.lhs:
+                    left_hand += str(statement)
+                    left_hand += str(', ')
+                string += left_hand[0:-2]
+                string += ') -> ('
+                string += rule.rhs.predicate
+                for term in rule.rhs.terms:
+                    string += ' ' + str(term)
+                string += ')'
+                if rule.asserted:
+                    string += ' ASSERTED'
+                if len(rule.supported_by) != 0:
+                    indent = '\n' + (depth+2)*' '
+                    for pair in rule.supported_by:
+                        string += indent
+                        string += 'SUPPORTED BY'
+                        for fr in pair:
+                            string += self.kb_helper(fr, depth+2)
+        return string
     def kb_explain(self, fact_or_rule):
         """
         Explain where the fact or rule comes from
@@ -143,6 +185,49 @@ class KnowledgeBase(object):
         ####################################################
         # Student code goes here
 
+        string = ''
+        depth = 2
+        indent = '\n' + depth*' '
+        if isinstance(fact_or_rule, Fact):
+            if fact_or_rule in self.facts:
+                fact = self._get_fact(fact_or_rule)
+                string += 'fact: '
+                string += str(fact.statement)
+                if fact.asserted:
+                    string += ' ASSERTED'
+                if len(fact.supported_by) != 0:
+                    for pair in fact.supported_by:
+                        string += indent + 'SUPPORTED BY'
+                        for fr in pair:
+                            string += self.kb_helper(fr, depth)
+            else:
+                string = "Fact is not in the KB"
+
+        elif isinstance(fact_or_rule, Rule):
+            if fact_or_rule in self.rules:
+                rule = self._get_rule(fact_or_rule)
+                string += 'rule:'
+                left_hand = ' ('
+                for statement in rule.lhs:
+                    left_hand += str(statement)
+                    left_hand += str(', ')
+                string += left_hand[0:-2]
+                string += ') -> ('
+                string += rule.rhs.predicate
+                for term in rule.rhs.terms:
+                    string += ' ' + str(term)
+                string += ')'
+                if rule.asserted:
+                    string += ' ASSERTED'
+                if len(rule.supported_by) != 0:
+                    #indent = '\n' + depth*' '
+                    for pair in rule.supported_by:
+                        string += indent + 'SUPPORTED BY'
+                        for fr in pair:
+                            string += self.kb_helper(fr, depth)
+            else:
+                string = "Rule is not in the KB"
+        return string
 
 class InferenceEngine(object):
     def fc_infer(self, fact, rule, kb):
